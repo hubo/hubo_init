@@ -1,0 +1,9 @@
+<library path="lib/hubo_init">
+  <class name="hubo_init"
+         type="hubo_init::InitPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to interface with hardware initialization commands
+    </description>
+  </class>
+</library>
