@@ -149,6 +149,7 @@ private:
     QRadioButton* fetOff;
     QRadioButton* zero;
     QRadioButton* initJoint; // Note: Not used... feels dangerous
+                             // It can change board settings in bad ways
   ///////////////
 
 
@@ -157,6 +158,7 @@ private:
 
     QLineEdit stateFlags;
 
+    QButtonGroup* jointStateGroup;
     std::vector<QPushButton*> jointStateButtons;
   ///////////////
 

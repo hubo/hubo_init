@@ -109,6 +109,7 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     globalCmdLayout->addWidget(initSensors);
     globalCmdLayout->addLayout(refreshLayout);
     QGroupBox* globalCmdBox = new QGroupBox;
+    globalCmdBox->setTitle("Initialization Commands");
     globalCmdBox->setLayout(globalCmdLayout);
     /////////////
 
@@ -153,8 +154,8 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     radioLayout->addWidget(zero);
 
     jointCmdButtons.resize(HUBO_JOINT_COUNT);
-
     jointCmdGroup = new QButtonGroup(this);
+    connect(jointCmdGroup, SIGNAL(buttonClicked(int)), this, SLOT(handleJointCmdButton(int)));
     QHBoxLayout* jointCmdLayout = new QHBoxLayout;
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
     {
@@ -172,14 +173,9 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     cmdLayout->addLayout(radioLayout);
     cmdLayout->addLayout(jointCmdLayout);
     QGroupBox* jointCmdBox = new QGroupBox;
+    jointCmdBox->setTitle("Joint Commands");
     jointCmdBox->setLayout(cmdLayout);
     ///////////////
-
-
-
-
-
-
 
 
     QVBoxLayout* masterCTLayout = new QVBoxLayout;
@@ -189,8 +185,35 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
 
     commandTab->setLayout(masterCTLayout);
 
-
-
+    
+    
+    jointStateButtons.resize(HUBO_JOINT_COUNT);
+    jointStateGroup = new QButtonGroup(this);
+    connect(jointStateGroup, SIGNAL(buttonClicked(int)), this, SLOT(handleJointStateButton(int)));
+    stateFlags = new QLineEdit;
+    QHBoxLayout* jointStateLayout = new QHBoxLayout;
+    for(int i=0; i<HUBO_JOINT_COUNT; i++)
+    {
+        QPushButton* tempPushButton = new QPushButton;
+        tempPushButton->setText(QString::fromLocal8Bit(jointNames[i]));
+        tempPushButton->setToolTip("Normal");
+        
+        jointStateGroup->addButton(tempPushButton, i);
+        jointStateLayout->addWidget(tempPushButton);
+        
+        jointStateButtons[i] = tempPushButton;
+    }
+    
+    QVBoxLayout* masterJSTLayout = new QVBoxLayout;
+    masterJSTLayout->addWidget(stateFlags);
+    masterJSTLayout->addLayout(jointStateLayout);
+    jointStateTab->setLayout(masterJSTLayout);
+    
+    
+    
+    
+    
+    
     // Next: jointStateTab, sensorCmdTab, and sensorStateTab
 
     addTab(commandTab, "Joint Command");
