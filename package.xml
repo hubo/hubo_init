@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <description brief="Hubo Hardware Initialization">
+  <description>
     RViz Plugin for interfacing with Hubo hardware initialization commands.
   </description>
 
@@ -29,6 +29,7 @@
   <!-- Authors do not have to be maintianers, but could be -->
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+  <author email="mxgrey@gatech.edu">M.X. Grey</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
@@ -46,15 +47,15 @@
   <build_depend>rospy</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rviz</build_depend>
-  <build_depend>std_msgs</build_depend>
   <run_depend>rospy</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rviz</run_depend>
-  <run_depend>std_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
+
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>
+
 </package>

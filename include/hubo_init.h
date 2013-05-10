@@ -78,7 +78,9 @@ public:
   // someone using the class for something else to pass in a parent
   // widget as they normally would with Qt.
   HuboInitWidget( QWidget* parent = 0 );
-  ~HuboInitWidget();
+
+  QString groupStyleSheet;
+
 
   // Handler for the nested ach daemon process
   QProcess achd;
@@ -102,17 +104,16 @@ public:
   // Slots will be "connected" to signals in order to respond to user events
 protected Q_SLOTS:
 
-  // Detect which button is being pressed
-  void detectJointCmdButton(int id);
-  void handleJointStateButton(int id);
-  void detectSensorCmdButton(int id);
-
   // Send the command once the joint button is released
   void handleJointCmdButton(int id);
   void handleJointStateButton(int id);
 
   // Send sensor commands once the button is released
-  void handleSensorButton(int id);
+  void handleRHFT();
+  void handleLHFT();
+  void handleRFFT();
+  void handleLFFT();
+  void handleIMU();
 
   void handleHomeAll();
   void handleHomeBad();
@@ -156,7 +157,7 @@ private:
   ///////////////
   QWidget* jointStateTab;
 
-    QLineEdit stateFlags;
+    QLineEdit* stateFlags;
 
     QButtonGroup* jointStateGroup;
     std::vector<QPushButton*> jointStateButtons;
@@ -168,19 +169,28 @@ private:
   ///////////////
   QWidget* sensorCmdTab;
 
+    QButtonGroup* radioSensorButtons;
     QRadioButton* nullSensor;
-    QRadioButton* zeroSensor;
-    QRadioButton* initSensor;
+    QRadioButton* initSensor; // Note: Not used... feels dangerous
+                              // It can change board settings in bad ways
+
+    QPushButton* rhFTButton;
+    QPushButton* lhFTButton;
+    QPushButton* rfFTButton;
+    QPushButton* lfFTButton;
+    QPushButton* imuButton;
   ///////////////
 
 
   ///////////////
   QWidget* sensorStateTab;
 
+    QGroupBox* ftBox;
     std::vector<QLineEdit*> ft_mx;
     std::vector<QLineEdit*> ft_my;
     std::vector<QLineEdit*> ft_fz;
 
+    QGroupBox* imuBox;
     QLineEdit* a_x;
     QLineEdit* a_y;
     QLineEdit* a_z;

@@ -4,14 +4,18 @@ project(hubo_init)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-set(ROS_BUILD_TYPE RelWithDebInfo)
-rosbuild_init()
+find_package( catkin REQUIRED )
 
 
 ## This plugin includes Qt widgets, so we must include Qt like so:
 find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
 include(${QT_USE_FILE})
+
+catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME}
+    CATKIN_DEPENDS roscpp rospy
+    DEPENDS ach QtCore QtGui )
 
 ## I prefer the Qt signals and slots to avoid defining "emit", "slots",
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
@@ -22,6 +26,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 ## Qt's meta-object compiler.
 qt4_wrap_cpp(MOC_FILES
   include/hubo_init.h
+  include/FlowLayout.h
 )
 
 
@@ -29,11 +34,13 @@ qt4_wrap_cpp(MOC_FILES
 ## the previous command which is stored in ``${MOC_FILES}``.
 set(SOURCE_FILES
   src/hubo_init.cpp
+  src/FlowLayout.cpp
   include/hubo_init.h
+  include/FlowLayout.h
   ${MOC_FILES}
 )
 
-
+include_directories( include )
 
 ## Set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
@@ -44,7 +51,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 ## "rviz_plugin_tutorials", or whatever your version of this project
 ## is called) and specify the list of source files we collected above
 ## in ``${SOURCE_FILES}``.
-rosbuild_add_library(${PROJECT_NAME} ${SOURCE_FILES})
+#rosbuild_add_library(${PROJECT_NAME} ${SOURCE_FILES})
+
+add_library( ${PROJECT_NAME} ${SOURCE_FILES} )
 
 
 ## Link the library with whatever Qt libraries have been defined by
