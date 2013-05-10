@@ -47,6 +47,9 @@
 #include <QProcess>
 #include <QGroupBox>
 #include <QButtonGroup>
+#include <QProcess>
+#include <QString>
+#include <QStringList>
 
 #include <vector>
 
@@ -83,7 +86,10 @@ public:
 
 
   // Handler for the nested ach daemon process
-  QProcess achd;
+  QProcess achChannelState;
+  QProcess achChannelCmd;
+  QProcess achdState;
+  QProcess achdCmd;
 
   // Ach Channels for sending and receiving data
   ach_channel_t stateChan;
@@ -100,8 +106,19 @@ public:
   void reddifyButton(const QPushButton* button); // Used if joint has an error
   void yellifyButton(const QPushButton* button); // Used if joint is inactive
 
+  void setIPAddress(int a, int b, int c, int d);
+  int getIPAddress(int index);
+
+
+  hubo_state_t h_state;
 
   // Slots will be "connected" to signals in order to respond to user events
+protected:
+  int ipAddrA;
+  int ipAddrB;
+  int ipAddrC;
+  int ipAddrD;
+
 protected Q_SLOTS:
 
   // Send the command once the joint button is released
@@ -124,13 +141,22 @@ protected Q_SLOTS:
 
   // Deal with achd crashes/failures
   void achdExit();
+  void achCreateCatch(QProcess::ProcessError err);
+
+  void ipEditHandle(const QString &text);
 
 private:
 
   ///////////////
+  void initializeCommandTab();
   QWidget* commandTab;
 
     QPushButton* achdConnect;
+    QLabel* statusLabel;
+    QLineEdit* ipAddrAEdit;
+    QLineEdit* ipAddrBEdit;
+    QLineEdit* ipAddrCEdit;
+    QLineEdit* ipAddrDEdit;
 
     QPushButton* homeAll;
     QPushButton* homeBad;
@@ -155,18 +181,24 @@ private:
 
 
   ///////////////
+  void initializeJointStateTab();
   QWidget* jointStateTab;
 
     QLineEdit* stateFlags;
 
     QButtonGroup* jointStateGroup;
     std::vector<QPushButton*> jointStateButtons;
+
+    QButtonGroup* radSelectGroup;
+    QRadioButton* radSelect;
+    QRadioButton* degSelect;
   ///////////////
 
   std::vector<QString> ftName;
 
 
   ///////////////
+  void initializeSensorCmdTab();
   QWidget* sensorCmdTab;
 
     QButtonGroup* radioSensorButtons;
@@ -183,6 +215,7 @@ private:
 
 
   ///////////////
+  void initializeSensorStateTab();
   QWidget* sensorStateTab;
 
     QGroupBox* ftBox;
@@ -211,8 +244,8 @@ public:
     // Now we declare overrides of rviz::Panel functions for saving and
     // loading data from the config file.  Here the data is the
     // topic name.
-//    virtual void load( const rviz::Config& config );
-//    virtual void save( rviz::Config config ) const;
+    virtual void load( const rviz::Config& config );
+    virtual void save( rviz::Config config ) const;
 
 private:
 

@@ -56,8 +56,7 @@ namespace hubo_init_space
 HuboInitPanel::HuboInitPanel(QWidget *parent)
     : rviz::Panel(parent)
 {
-    content = new HuboInitWidget();
-
+    content = new HuboInitWidget;
     QHBoxLayout* panelLayout = new QHBoxLayout;
     panelLayout->addWidget(content);
     setLayout(panelLayout);
@@ -67,7 +66,7 @@ HuboInitPanel::HuboInitPanel(QWidget *parent)
 HuboInitWidget::HuboInitWidget(QWidget *parent)
     : QTabWidget(parent)
 {
-    //TODO: initializeAch();
+    initializeAch();
 
     groupStyleSheet = "QGroupBox {"
                       "border: 1px solid gray;"
@@ -81,17 +80,158 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
                       "}";
 
 
+    initializeCommandTab();
+    std::cerr << "Command Tab loaded" << std::endl;
+    
+    initializeJointStateTab();
+    std::cerr << "Joint State Tab loaded" << std::endl;
+
+    initializeSensorCmdTab();
+    std::cerr << "Sensor Command Tab loaded" << std::endl;
+
+    initializeSensorStateTab();
+    std::cerr << "Sensor State Tab loaded" << std::endl;
+
+    addTab(commandTab, "Joint Command");
+    addTab(jointStateTab, "Joint State");
+    addTab(sensorCmdTab, "Sensor Command");
+    addTab(sensorStateTab, "Sensor State");
+
+}
+
+void HuboInitWidget::initializeAch()
+{
+    memset(&h_state, 0, sizeof(h_state));
+
+    QStringList argList;
+    argList.push_back("-1");
+    argList.push_back("-C " + QString::fromLocal8Bit(HUBO_CHAN_STATE_NAME));
+    argList.push_back("-m 10");
+    argList.push_back("-n 8000");
+    argList.push_back("-o 666");
+    achChannelState.start("ach", argList);
+    connect(&achChannelState, SIGNAL(error(QProcess::ProcessError)),
+            this, SLOT(achCreateCatch(QProcess::ProcessError)));
+}
+
+void HuboInitWidget::achCreateCatch(QProcess::ProcessError err)
+{
+    ROS_INFO("Creating Ach Channel Failed: Error Code %d", (int)err);
+}
+
+
+void HuboInitWidget::setIPAddress(int a, int b, int c, int d)
+{
+    ipAddrA = a;
+    ipAddrB = b;
+    ipAddrC = c;
+    ipAddrD = d;
+
+    ipAddrAEdit->setText(QString::number(ipAddrA));
+    ipAddrBEdit->setText(QString::number(ipAddrB));
+    ipAddrCEdit->setText(QString::number(ipAddrC));
+    ipAddrDEdit->setText(QString::number(ipAddrD));
+}
+
+int HuboInitWidget::getIPAddress(int index)
+{
+    switch(index)
+    {
+    case 0:
+        return ipAddrA; break;
+    case 1:
+        return ipAddrB; break;
+    case 2:
+        return ipAddrC; break;
+    case 3:
+        return ipAddrD; break;
+    }
+}
+
+void HuboInitWidget::initializeCommandTab()
+{
     // Set up the networking box
+    QVBoxLayout* achdLayout = new QVBoxLayout;
+
     achdConnect = new QPushButton;
     achdConnect->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     achdConnect->setText("Connect");
-    achdConnect->setToolTip("Connect to motion computer");
+    achdConnect->setToolTip("Connect to Hubo's on board computer");
+    achdLayout->addWidget(achdConnect, 0, Qt::AlignCenter);
+
+    QHBoxLayout* statusLayout = new QHBoxLayout;
+    QLabel* staticLabel = new QLabel;
+    staticLabel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    staticLabel->setText("Status: ");
+    statusLayout->addWidget(staticLabel);
+    statusLabel = new QLabel;
+    statusLabel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    statusLabel->setText("Not Connected");
+    statusLayout->addWidget(statusLabel);
+    achdLayout->addLayout(statusLayout);
+
     QHBoxLayout* networkLayout = new QHBoxLayout;
-    networkLayout->addWidget(achdConnect);
+    networkLayout->addLayout(achdLayout);
+
+    QHBoxLayout* ipLayout = new QHBoxLayout;
+    ipLayout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    ipAddrAEdit = new QLineEdit;
+    ipAddrAEdit->setMaxLength(3);
+    ipAddrAEdit->setMaximumWidth(50);
+    ipAddrAEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    ipAddrAEdit->setToolTip("IP Address for Hubo's on board computer");
+    ipLayout->addWidget(ipAddrAEdit);
+    connect(ipAddrAEdit, SIGNAL(textEdited(QString)), this, SLOT(ipEditHandle(QString)));
+    QLabel* dot1 = new QLabel;
+    dot1->setText(".");
+    ipLayout->addWidget(dot1);
+    ipAddrBEdit = new QLineEdit;
+    ipAddrBEdit->setMaxLength(3);
+    ipAddrBEdit->setMaximumWidth(50);
+    ipAddrBEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    ipAddrBEdit->setToolTip("IP Address for Hubo's on board computer");
+    ipLayout->addWidget(ipAddrBEdit);
+    connect(ipAddrBEdit, SIGNAL(textEdited(QString)), this, SLOT(ipEditHandle(QString)));
+    QLabel* dot2 = new QLabel;
+    dot2->setText(".");
+    ipLayout->addWidget(dot2);
+    ipAddrCEdit = new QLineEdit;
+    ipAddrCEdit->setMaxLength(3);
+    ipAddrCEdit->setMaximumWidth(50);
+    ipAddrCEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    ipAddrCEdit->setToolTip("IP Address for Hubo's on board computer");
+    ipLayout->addWidget(ipAddrCEdit);
+    connect(ipAddrCEdit, SIGNAL(textEdited(QString)), this, SLOT(ipEditHandle(QString)));
+    QLabel* dot3 = new QLabel;
+    dot3->setText(".");
+    ipLayout->addWidget(dot3);
+    ipAddrDEdit = new QLineEdit;
+    ipAddrDEdit->setMaxLength(3);
+    ipAddrDEdit->setMaximumWidth(50);
+    ipAddrDEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    ipAddrDEdit->setToolTip("IP Address for Hubo's on board computer");
+    ipLayout->addWidget(ipAddrDEdit);
+    connect(ipAddrDEdit, SIGNAL(textEdited(QString)), this, SLOT(ipEditHandle(QString)));
+
+    QLabel* ipTitle = new QLabel;
+    ipTitle->setText("IP Address");
+    ipTitle->setToolTip("IP Address for Hubo's on board computer");
+
+    QVBoxLayout* ipUpperLayout = new QVBoxLayout;
+    ipUpperLayout->addWidget(ipTitle, 0, Qt::AlignLeft | Qt::AlignBottom);
+    ipUpperLayout->addLayout(ipLayout);
+
+    networkLayout->addLayout(ipUpperLayout);
+
+
+
     QGroupBox* networkBox = new QGroupBox;
     networkBox->setStyleSheet(groupStyleSheet);
     networkBox->setTitle("Ach Networking");
     networkBox->setLayout(networkLayout);
+
+    setIPAddress(192, 168, 1, 0);
+
     ////////////
 
 
@@ -141,7 +281,7 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
 
 
     // Set up the joint command box
-    QHBoxLayout* radioLayout = new QHBoxLayout;
+    FlowLayout* radioLayout = new FlowLayout;
     radioCmdButtons = new QButtonGroup(this);
 
     radioCmdButtons->setExclusive(true);
@@ -189,6 +329,16 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     radioCmdButtons->addButton(zero);
     radioLayout->addWidget(zero);
 
+    initJoint = new QRadioButton;
+    initJoint->setText("Initialize");
+    initJoint->setToolTip("Load default settings on board\n"
+                          "WARNING: This will overwrite your current settings\n"
+                          "(Currently disabled)");
+    initJoint->setCheckable(false);
+    initJoint->setDisabled(true);
+    radioCmdButtons->addButton(initJoint);
+    radioLayout->addWidget(initJoint);
+
     jointCmdButtons.resize(HUBO_JOINT_COUNT);
     jointCmdGroup = new QButtonGroup(this);
     connect(jointCmdGroup, SIGNAL(buttonClicked(int)), this, SLOT(handleJointCmdButton(int)));
@@ -224,10 +374,19 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
 
     commandTab = new QWidget;
     commandTab->setLayout(masterCTLayout);
+}
 
-    std::cerr << "Command Tab complete" << std::endl;
-    
+void HuboInitWidget::ipEditHandle(const QString &text)
+{
+    ipAddrA = ipAddrAEdit->text().toInt();
+    ipAddrB = ipAddrBEdit->text().toInt();
+    ipAddrC = ipAddrCEdit->text().toInt();
+    ipAddrD = ipAddrDEdit->text().toInt();
+}
 
+
+void HuboInitWidget::initializeJointStateTab()
+{
     stateFlags = new QLineEdit;
     stateFlags->setReadOnly(true);
 
@@ -241,22 +400,47 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
         tempPushButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
         tempPushButton->setText(QString::fromLocal8Bit(jointNames[i]));
         tempPushButton->setToolTip("Normal");
-        
+
         jointStateGroup->addButton(tempPushButton, i);
         jointStateLayout->addWidget(tempPushButton);
-        
+
         jointStateButtons[i] = tempPushButton;
     }
-    
+
+    radSelectGroup = new QButtonGroup;
+    radSelectGroup->setExclusive(true);
+    QHBoxLayout* radSelectLayout = new QHBoxLayout;
+    radSelectLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    radSelect = new QRadioButton;
+    radSelect->setChecked(true);
+    radSelect->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    radSelect->setText("Radians");
+    radSelect->setToolTip("Display joint angles in radians");
+    radSelectGroup->addButton(radSelect);
+    radSelectLayout->addWidget(radSelect);
+
+    degSelect = new QRadioButton;
+    degSelect->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    degSelect->setText("Degrees");
+    degSelect->setToolTip("Display joint angles in degrees");
+    radSelectGroup->addButton(degSelect);
+    radSelectLayout->addWidget(degSelect);
+
+
     QVBoxLayout* masterJSTLayout = new QVBoxLayout;
     masterJSTLayout->addWidget(stateFlags);
     masterJSTLayout->addLayout(jointStateLayout);
+    masterJSTLayout->addSpacing(15);
+    masterJSTLayout->addLayout(radSelectLayout);
 
     jointStateTab = new QWidget;
     jointStateTab->setLayout(masterJSTLayout);
-    
-    std::cerr << "Joint State Tab complete" << std::endl;
+}
 
+
+void HuboInitWidget::initializeSensorCmdTab()
+{
     radioSensorButtons = new QButtonGroup;
     radioSensorButtons->setExclusive(true);
 
@@ -264,8 +448,18 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     nullSensor = new QRadioButton;
     nullSensor->setText("Null Sensor");
     nullSensor->setToolTip("Set sensor values to zero. Must run this before data can be received.");
+    radioSensorButtons->addButton(nullSensor);
     radioSensorLayout->addWidget(nullSensor);
     nullSensor->setChecked(true);
+    initSensor = new QRadioButton;
+    initSensor->setText("Initialize");
+    initSensor->setToolTip("Reset sensor board values to default settings.\n"
+                           "WARNING: This overwrites the current board settings.\n"
+                           "(Currently Disabled)");
+    initSensor->setCheckable(false);
+    initSensor->setDisabled(true);
+    radioSensorButtons->addButton(initSensor);
+    radioSensorLayout->addWidget(initSensor);
     // Note: Leaving out initSensor because I think it's a dangerous feature
 
     QHBoxLayout* sensorLayout1 = new QHBoxLayout;
@@ -312,12 +506,12 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
 
     sensorCmdTab = new QWidget;
     sensorCmdTab->setLayout(masterSCTLayout);
+}
 
 
-    std::cerr << "Sensor Command Tab complete" << std::endl;
-
+void HuboInitWidget::initializeSensorStateTab()
+{
     QVBoxLayout* sensorStateLayout = new QVBoxLayout;
-
 
     QGroupBox* ftBox = new QGroupBox;
     ftBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
@@ -475,26 +669,44 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
 
     sensorStateTab = new QWidget;
     sensorStateTab->setLayout(sensorStateLayout);
+}
 
-    std::cerr << "Sensor State Tab complete" << std::endl;
+void HuboInitPanel::save(rviz::Config config) const
+{
+    rviz::Panel::save(config);
+    config.mapSetValue("Class", getClassId());
 
-    addTab(commandTab, "Joint Command");
-    addTab(jointStateTab, "Joint State");
-    addTab(sensorCmdTab, "Sensor Command");
-    addTab(sensorStateTab, "Sensor State");
+    rviz::Config ip_config = config.mapMakeChild("HuboIP");
 
+    QVariant a = QVariant(content->getIPAddress(0));
+    QVariant b = QVariant(content->getIPAddress(1));
+    QVariant c = QVariant(content->getIPAddress(2));
+    QVariant d = QVariant(content->getIPAddress(3));
 
-
+    ip_config.mapSetValue("ipAddrA", a);
+    ip_config.mapSetValue("ipAddrB", b);
+    ip_config.mapSetValue("ipAddrC", c);
+    ip_config.mapSetValue("ipAddrD", d);
 
 }
 
-
-
-
-
+void HuboInitPanel::load(const rviz::Config &config)
+{
+    rviz::Panel::load(config);
+    rviz::Config ip_config = config.mapGetChild("HuboIP");
+    QVariant a, b, c, d;
+    if( !ip_config.mapGetValue("ipAddrA", &a) || !ip_config.mapGetValue("ipAddrB", &b)
+     || !ip_config.mapGetValue("ipAddrC", &c) || !ip_config.mapGetValue("ipAddrD", &d))
+        ROS_INFO("Loading the IP Address Failed");
+    else
+        content->setIPAddress(a.toInt(), b.toInt(), c.toInt(), d.toInt());
+}
 
 
 } // End hubo_init_space
+
+
+
 
 #include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS( hubo_init_space::HuboInitPanel,rviz::Panel )
