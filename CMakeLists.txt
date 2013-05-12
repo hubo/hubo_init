@@ -34,6 +34,7 @@ qt4_wrap_cpp(MOC_FILES
 ## the previous command which is stored in ``${MOC_FILES}``.
 set(SOURCE_FILES
   src/hubo_init.cpp
+  src/hubo_init_slots.cpp
   src/FlowLayout.cpp
   include/hubo_init.h
   include/FlowLayout.h
@@ -64,5 +65,5 @@ add_library( ${PROJECT_NAME} ${SOURCE_FILES} )
 ## library and names the actual file something like
 ## "librviz_plugin_tutorials.so", or whatever is appropriate for your
 ## particular OS.
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ach huboparams)
 

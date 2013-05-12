@@ -35,16 +35,6 @@
  */
 
 
-#include <stdio.h>
-
-#include <QPainter>
-#include <QLineEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QTimer>
-
-
 #include "hubo_init.h"
 #include "FlowLayout.h"
 
@@ -66,7 +56,6 @@ HuboInitPanel::HuboInitPanel(QWidget *parent)
 HuboInitWidget::HuboInitWidget(QWidget *parent)
     : QTabWidget(parent)
 {
-    initializeAch();
 
     groupStyleSheet = "QGroupBox {"
                       "border: 1px solid gray;"
@@ -97,22 +86,13 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     addTab(sensorCmdTab, "Sensor Command");
     addTab(sensorStateTab, "Sensor State");
 
+    
+    initializeAch();
+    
+    connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(refreshState()));
+    refreshTimer.start(getRefreshTime());
 }
 
-void HuboInitWidget::initializeAch()
-{
-    memset(&h_state, 0, sizeof(h_state));
-
-    QStringList argList;
-    argList.push_back("-1");
-    argList.push_back("-C " + QString::fromLocal8Bit(HUBO_CHAN_STATE_NAME));
-    argList.push_back("-m 10");
-    argList.push_back("-n 8000");
-    argList.push_back("-o 666");
-    achChannelState.start("ach", argList);
-    connect(&achChannelState, SIGNAL(error(QProcess::ProcessError)),
-            this, SLOT(achCreateCatch(QProcess::ProcessError)));
-}
 
 void HuboInitWidget::achCreateCatch(QProcess::ProcessError err)
 {
@@ -120,33 +100,7 @@ void HuboInitWidget::achCreateCatch(QProcess::ProcessError err)
 }
 
 
-void HuboInitWidget::setIPAddress(int a, int b, int c, int d)
-{
-    ipAddrA = a;
-    ipAddrB = b;
-    ipAddrC = c;
-    ipAddrD = d;
 
-    ipAddrAEdit->setText(QString::number(ipAddrA));
-    ipAddrBEdit->setText(QString::number(ipAddrB));
-    ipAddrCEdit->setText(QString::number(ipAddrC));
-    ipAddrDEdit->setText(QString::number(ipAddrD));
-}
-
-int HuboInitWidget::getIPAddress(int index)
-{
-    switch(index)
-    {
-    case 0:
-        return ipAddrA; break;
-    case 1:
-        return ipAddrB; break;
-    case 2:
-        return ipAddrC; break;
-    case 3:
-        return ipAddrD; break;
-    }
-}
 
 void HuboInitWidget::initializeCommandTab()
 {
@@ -158,6 +112,12 @@ void HuboInitWidget::initializeCommandTab()
     achdConnect->setText("Connect");
     achdConnect->setToolTip("Connect to Hubo's on board computer");
     achdLayout->addWidget(achdConnect, 0, Qt::AlignCenter);
+    
+    achdDisconnect = new QPushButton;
+    achdDisconnect->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    achdDisconnect->setText("Disconnect");
+    achdDisconnect->setToolTip("Disconnect from Hubo's on board computer");
+    achdLayout->addWidget(achdDisconnect, 0, Qt::AlignCenter);
 
     QHBoxLayout* statusLayout = new QHBoxLayout;
     QLabel* staticLabel = new QLabel;
@@ -323,11 +283,11 @@ void HuboInitWidget::initializeCommandTab()
     radioCmdButtons->addButton(fetOff);
     radioLayout->addWidget(fetOff);
 
-    zero = new QRadioButton;
-    zero->setText("Zero");
-    zero->setToolTip("Zero out the current value of the encoder");
-    radioCmdButtons->addButton(zero);
-    radioLayout->addWidget(zero);
+    beep = new QRadioButton;
+    beep->setText("Beep");
+    beep->setToolTip("Instruct the board to beep");
+    radioCmdButtons->addButton(beep);
+    radioLayout->addWidget(beep);
 
     initJoint = new QRadioButton;
     initJoint->setText("Initialize");
@@ -376,13 +336,6 @@ void HuboInitWidget::initializeCommandTab()
     commandTab->setLayout(masterCTLayout);
 }
 
-void HuboInitWidget::ipEditHandle(const QString &text)
-{
-    ipAddrA = ipAddrAEdit->text().toInt();
-    ipAddrB = ipAddrBEdit->text().toInt();
-    ipAddrC = ipAddrCEdit->text().toInt();
-    ipAddrD = ipAddrDEdit->text().toInt();
-}
 
 
 void HuboInitWidget::initializeJointStateTab()
@@ -406,6 +359,13 @@ void HuboInitWidget::initializeJointStateTab()
 
         jointStateButtons[i] = tempPushButton;
     }
+    
+    copyJoints = new QPushButton;
+    copyJoints->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    copyJoints->setText("Copy Data");
+    copyJoints->setToolTip("Copy current joint state values to clipboard\n"
+                           "(tab separated)");
+    connect(copyJoints, SIGNAL(clicked()), this, SLOT(handleJointCopy()));
 
     radSelectGroup = new QButtonGroup;
     radSelectGroup->setExclusive(true);
@@ -431,6 +391,7 @@ void HuboInitWidget::initializeJointStateTab()
     QVBoxLayout* masterJSTLayout = new QVBoxLayout;
     masterJSTLayout->addWidget(stateFlags);
     masterJSTLayout->addLayout(jointStateLayout);
+    masterJSTLayout->addWidget(copyJoints, 0, Qt::AlignLeft | Qt::AlignVCenter);
     masterJSTLayout->addSpacing(15);
     masterJSTLayout->addLayout(radSelectLayout);
 
@@ -565,25 +526,37 @@ void HuboInitWidget::initializeSensorStateTab()
     ft_fz.resize(4);
     for(int i=0; i<4; i++)
     {
+        QSizePolicy mxPolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        
         QLineEdit* tempMxEdit = new QLineEdit;
-        tempMxEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        tempMxEdit->setSizePolicy(mxPolicy);
         tempMxEdit->setReadOnly(true);
+        //tempMxEdit->setMinimumWidth(1);
         ftStateLayout->addWidget(tempMxEdit, 1, i+1, 1, 1);
         ft_mx[i] = tempMxEdit;
 
         QLineEdit* tempMyEdit = new QLineEdit;
-        tempMyEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        tempMyEdit->setSizePolicy(mxPolicy);
         tempMyEdit->setReadOnly(true);
+        //tempMyEdit->setMinimumWidth(1);
         ftStateLayout->addWidget(tempMyEdit, 2, i+1, 1, 1);
         ft_my[i] = tempMyEdit;
 
         QLineEdit* tempFzEdit = new QLineEdit;
-        tempFzEdit->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        tempFzEdit->setSizePolicy(mxPolicy);
         tempFzEdit->setReadOnly(true);
+        //tempFzEdit->setMinimumWidth(1);
         ftStateLayout->addWidget(tempFzEdit, 3, i+1, 1, 1);
         ft_fz[i] = tempFzEdit;
     }
 
+    copyFT = new QPushButton;
+    copyFT->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    copyFT->setText("Copy Data");
+    copyFT->setToolTip("Copy the Force-Torque data to clipboard (tab and newline separated)");
+    ftStateLayout->addWidget(copyFT, 4, 0, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+    connect(copyFT, SIGNAL(clicked()), this, SLOT(handleFTCopy()));
+    
     ftBox->setLayout(ftStateLayout);
     sensorStateLayout->addWidget(ftBox, 0, Qt::AlignHCenter | Qt::AlignTop);
 
@@ -663,6 +636,13 @@ void HuboInitWidget::initializeSensorStateTab()
     w_z->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     w_z->setReadOnly(true);
     imuStateLayout->addWidget(w_z, 4, 2, 1, 1);
+    
+    copyIMU = new QPushButton;
+    copyIMU->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    copyIMU->setText("Copy Data");
+    copyIMU->setToolTip("Copy the IMU data to clipboard (tab and newline separated)");
+    imuStateLayout->addWidget(copyIMU, 5, 0, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+    connect(copyIMU, SIGNAL(clicked()), this, SLOT(handleIMUCopy()));
 
     imuBox->setLayout(imuStateLayout);
     sensorStateLayout->addWidget(imuBox, Qt::AlignHCenter | Qt::AlignTop);

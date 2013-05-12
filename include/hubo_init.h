@@ -37,6 +37,15 @@
 #ifndef HUBO_INIT_H
 #define HUBO_INIT_H
 
+#include <stdio.h>
+
+#include <QApplication>
+#include <QPainter>
+#include <QLineEdit>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QTimer>
 #include <ros/ros.h>
 #include <QTableWidget>
 #include <QPushButton>
@@ -50,12 +59,17 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
+#include <QTextStream>
+#include <QClipboard>
+#include <QPalette>
+#include <QColor>
 
 #include <vector>
 
 #include <rviz/panel.h>
 
 #include <hubo.h>
+#include <hubo-jointparams.h>
 
 namespace hubo_init_space
 {
@@ -63,8 +77,6 @@ namespace hubo_init_space
 // Here we declare our new subclass of rviz::Panel.  Every panel which
 // can be added via the Panels/Add_New_Panel menu is a subclass of
 // rviz::Panel.
-
-
 
 
 class HuboInitWidget: public QTabWidget
@@ -89,28 +101,39 @@ public:
   QProcess achChannelState;
   QProcess achChannelCmd;
   QProcess achdState;
+  bool stateConnected;
   QProcess achdCmd;
+  bool cmdConnected;
+  
+  // Update timer
+  QTimer refreshTimer;
+  int getRefreshTime();
 
   // Ach Channels for sending and receiving data
   ach_channel_t stateChan;
+  bool stateOpen;
   ach_channel_t cmdChan;
-
-  // Structs for storing data to transmit
-  hubo_state_t state;
-  hubo_board_cmd_t cmd;
+  bool cmdOpen;
 
   void initializeAch();
+  void commandSensor();
+  void sendCommand();
 
-  void normifyButton(const QPushButton* button); // Used if state is normal
-  void purpifyButton(const QPushButton* button); // Used if joint is homing/failed to home
-  void reddifyButton(const QPushButton* button); // Used if joint has an error
-  void yellifyButton(const QPushButton* button); // Used if joint is inactive
+  void normifyButton(int id); // Used if state is normal
+  void purpifyButton(int id); // Used if joint is homing/failed to home
+  void reddifyButton(int id); // Used if joint has an error
+  void yellifyButton(int id); // Used if joint is inactive
 
   void setIPAddress(int a, int b, int c, int d);
   int getIPAddress(int index);
 
-
-  hubo_state_t h_state;
+  // Structs for storing data to transmit
+  struct hubo_state h_state;
+  struct hubo_board_cmd h_cmd;
+  struct hubo_param h_param;
+  
+  bool checkJointError(int id);
+  bool checkJointHomed(int id);
 
   // Slots will be "connected" to signals in order to respond to user events
 protected:
@@ -135,14 +158,28 @@ protected Q_SLOTS:
   void handleHomeAll();
   void handleHomeBad();
   void handleInitSensors();
+  
+  void handleFTCopy();
+  void handleIMUCopy();
+  void handleJointCopy();
 
   // Update all state information
   void refreshState();
 
   // Deal with achd crashes/failures
-  void achdExit();
+  void achdSStartedSlot();
+  void achdCStartedSlot();
+  void achdSExitError(QProcess::ProcessError err);
+  void achdSExitFinished(int num, QProcess::ExitStatus status);
+  void achdCExitError(QProcess::ProcessError err);
+  void achdCExitFinished(int num, QProcess::ExitStatus status);
+  void achdConnectSlot();
+  void achdDisconnectSlot();
   void achCreateCatch(QProcess::ProcessError err);
-
+  
+  void achCreateSHandle();
+  void achCreateCHandle();
+  
   void ipEditHandle(const QString &text);
 
 private:
@@ -152,6 +189,7 @@ private:
   QWidget* commandTab;
 
     QPushButton* achdConnect;
+    QPushButton* achdDisconnect;
     QLabel* statusLabel;
     QLineEdit* ipAddrAEdit;
     QLineEdit* ipAddrBEdit;
@@ -174,7 +212,7 @@ private:
     QRadioButton* ctrlOff;
     QRadioButton* fetOn;
     QRadioButton* fetOff;
-    QRadioButton* zero;
+    QRadioButton* beep;
     QRadioButton* initJoint; // Note: Not used... feels dangerous
                              // It can change board settings in bad ways
   ///////////////
@@ -188,6 +226,7 @@ private:
 
     QButtonGroup* jointStateGroup;
     std::vector<QPushButton*> jointStateButtons;
+    QPushButton* copyJoints;
 
     QButtonGroup* radSelectGroup;
     QRadioButton* radSelect;
@@ -222,6 +261,7 @@ private:
     std::vector<QLineEdit*> ft_mx;
     std::vector<QLineEdit*> ft_my;
     std::vector<QLineEdit*> ft_fz;
+    QPushButton* copyFT;
 
     QGroupBox* imuBox;
     QLineEdit* a_x;
@@ -231,6 +271,7 @@ private:
     QLineEdit* w_x;
     QLineEdit* w_y;
     QLineEdit* w_z;
+    QPushButton* copyIMU;
   ///////////////
 
 };
