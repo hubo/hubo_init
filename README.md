@@ -9,7 +9,8 @@ are going to be ROS-based (specifically using RViz). This is the first step in m
 that integration a reality.
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  IF  YOU  ARE  NEW  TO  ROS  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+_______________________________  IF  YOU  ARE  NEW  TO  ROS  _________________________________
 I strongly recommend looking over the tutorials for ROS: http://www.ros.org/wiki/ROS/Tutorials
 You will not technically need to understand ROS or how it works to use hubo_init, but
 it is not difficult to learn and will certainly be worthwhile down the road. Regardless,
@@ -20,7 +21,8 @@ whether or not you are familiar with ROS.
 
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~  Prerequisites  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+___________________________ PREREQUISITES ______________________________
 
 This package depends on both ROS and hubo-ach.
 
