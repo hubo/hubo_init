@@ -44,6 +44,14 @@ namespace hubo_init_space
 
 void HuboInitWidget::refreshState()
 {
+    size_t fs;
+    ach_status_t r = ACH_OK;
+    if(stateOpen)
+        r = ach_get(&stateChan, &h_state, sizeof(h_state), &fs, NULL, ACH_O_LAST);
+    if( r != ACH_OK && r != ACH_STALE_FRAMES && r != ACH_MISSED_FRAME )
+        std::cerr << ach_result_to_string(r) << std::endl;
+
+
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
     {
         if( h_state.joint[i].active == 0 )
@@ -55,40 +63,53 @@ void HuboInitWidget::refreshState()
         else
             normifyButton(i);
         
-        QString jointText;
-        double pos = h_state.joint[i].pos;
-        if( degSelect->isChecked() )
-            pos = pos*180.0/M_PI;
-        
-        QTextStream(&jointText) << QString::fromLocal8Bit(jointNames[i])
-                                << "\n" << pos;
-        jointStateButtons[i]->setText(jointText);
+        if(currentIndex()==1)
+        {
+            QString jointText;
+            QString jointVal;
+            double pos = h_state.joint[i].pos;
+            if( degSelect->isChecked() )
+                jointVal.sprintf("%4.1f", pos*180.0/M_PI);
+            else
+                jointVal.sprintf("%2.3f", pos);
+
+            QTextStream(&jointText) << QString::fromLocal8Bit(h_param.joint[i].name)
+                                    << "\n" << jointVal;
+            jointStateButtons[i]->setText(jointText);
+        }
     }
     
-    for(int i=0; i<4; i++)
+    if(currentIndex()==3)
     {
-        ft_mx[i]->setText(QString::number(h_state.ft[i].m_x));
-        ft_my[i]->setText(QString::number(h_state.ft[i].m_y));
-        ft_fz[i]->setText(QString::number(h_state.ft[i].f_z));
+        for(int i=0; i<4; i++)
+        {
+            ft_mx[i]->setText(QString::number(h_state.ft[i].m_x));
+            ft_my[i]->setText(QString::number(h_state.ft[i].m_y));
+            ft_fz[i]->setText(QString::number(h_state.ft[i].f_z));
+        }
+    
+        a_x->setText(QString::number(h_state.imu[2].a_x));
+        a_y->setText(QString::number(h_state.imu[2].a_y));
+        a_z->setText(QString::number(h_state.imu[2].a_z));
+
+        w_x->setText(QString::number(h_state.imu[2].w_x));
+        w_y->setText(QString::number(h_state.imu[2].w_y));
+        w_z->setText(QString::number(h_state.imu[2].w_z));
     }
-    
-    a_x->setText(QString::number(h_state.imu[2].a_x));
-    a_y->setText(QString::number(h_state.imu[2].a_y));
-    a_z->setText(QString::number(h_state.imu[2].a_z));
-    
-    w_x->setText(QString::number(h_state.imu[2].w_x));
-    w_y->setText(QString::number(h_state.imu[2].w_y));
-    w_z->setText(QString::number(h_state.imu[2].w_z));
-    
-    refreshTimer.start(getRefreshTime());
+
+    emit sendWaitTime(getRefreshTime());
 }
 
 void HuboInitWidget::normifyButton(int id)
 {
     QColor color(230,230,230);
     QString style = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 ";
-    jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
-    jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==0)
+        jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==1)
+        jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
     
     
     jointCmdButtons[id]->setToolTip("Normal");
@@ -97,12 +118,13 @@ void HuboInitWidget::normifyButton(int id)
 
 void HuboInitWidget::yellifyButton(int id)
 {
-//    QColor color(250,250,210);
-    
-    QColor color(200,0,0);
+    QColor color(250,250,210);
     QString style = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 ";
-    jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
-    jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==0)
+        jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
+    if(currentIndex()==1)
+        jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
     
     
     jointCmdButtons[id]->setToolTip("Inactive");
@@ -113,8 +135,12 @@ void HuboInitWidget::reddifyButton(int id)
 {
     QColor color(200,0,0);
     QString style = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 ";
-    jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
-    jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==0)
+        jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==1)
+        jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
     
     
     jointCmdButtons[id]->setToolTip("Error!");
@@ -125,8 +151,12 @@ void HuboInitWidget::purpifyButton(int id)
 {
     QColor color(200,0,200);
     QString style = "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 ";
-    jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
-    jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==0)
+        jointCmdButtons[id]->setStyleSheet(style + color.name() + ")");
+
+    if(currentIndex()==1)
+        jointStateButtons[id]->setStyleSheet(style + color.name() + ")");
     
     
     jointCmdButtons[id]->setToolTip("Not Homed!");
@@ -241,13 +271,32 @@ void HuboInitWidget::handleHomeAll()
 
 void HuboInitWidget::handleHomeBad()
 {
-    h_cmd.type = D_GOTO_HOME;
+    bool ignore[HUBO_JOINT_COUNT];
+    for(int i=0; i<HUBO_JOINT_COUNT; i++)
+        ignore[i] = false;
+
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
     {
-        if( h_state.status[i].homeFlag != 6 )
+        if( h_state.status[i].homeFlag != 6 && !ignore[i] && h_state.joint[i].active == 1 )
         {
-            h_cmd.joint = i;
-            sendCommand();
+            if( i != LF1 && i !=LF2 && i != LF3 && i != LF4 && i != LF5
+             && i != RF1 && i !=RF2 && i != RF3 && i != RF4 && i != RF5)
+            {
+                int numMot = h_param.joint[i].numMot;
+                int jmc = h_param.joint[i].jmc;
+
+                for(int j=0; j < numMot; j++)
+                {
+                    h_cmd.joint = h_param.driver[jmc].joints[j];
+                    ignore[h_cmd.joint] = true;
+
+                    h_cmd.type = D_ZERO_ENCODER;
+                    sendCommand();
+
+                    h_cmd.type = D_GOTO_HOME;
+                    sendCommand();
+                }
+            }
         }
     }
 }
@@ -263,7 +312,11 @@ void HuboInitWidget::handleJointCmdButton(int id)
     h_cmd.joint = id;
     
     if( home->isChecked() )
+    {
+        h_cmd.type = D_ZERO_ENCODER;
+        sendCommand();
         h_cmd.type = D_GOTO_HOME;
+    }
     else if( reset->isChecked() )
         h_cmd.type = D_ZERO_ENCODER;
     else if( ctrlOn->isChecked() )
@@ -352,9 +405,9 @@ void HuboInitWidget::handleJointStateButton(int id)
     QString lineStatus;
     QString toolStatus;
     
-    QTextStream(&lineStatus) << QString::fromLocal8Bit(jointNames[id]) << " ";
+    QTextStream(&lineStatus) << QString::fromLocal8Bit(h_param.joint[id].name) << " ";
     QTextStream(&lineStatus) << QString::number(h_state.joint[id].pos) << " -- ";
-    QTextStream(&toolStatus) << QString::fromLocal8Bit(jointNames[id]) << ":";
+    QTextStream(&toolStatus) << QString::fromLocal8Bit(h_param.joint[id].name) << ":";
     if(h_state.status[id].homeFlag != 6)
     {
         QTextStream(&lineStatus) << "H:" << h_state.status[id].homeFlag << " ";
@@ -424,19 +477,29 @@ void HuboInitWidget::handleJointStateButton(int id)
 
 int HuboInitWidget::getRefreshTime()
 {
-    return (int)(1.0/refreshRate->value())*1000; // milliseconds
+    return (int)(refreshRate->value()*1000); // milliseconds
 }
 
+void HuboInitWidget::initializeAchStructs()
+{
+    memset(&h_state, 0, sizeof(h_state));
+    memset(&h_param, 0, sizeof(h_param));
+    memset(&h_cmd, 0, sizeof(h_cmd));
+    setJointParams(&h_param, &h_state);
+    setSensorDefaults(&h_param);
 
-void HuboInitWidget::initializeAch()
+    for(int i=0; i<HUBO_JOINT_COUNT; i++)
+        if( strcmp(h_param.joint[i].name, "") == 0 )
+            sprintf( h_param.joint[i].name, "N/A\0" );
+}
+
+void HuboInitWidget::initializeAchConnections()
 {
     stateConnected = false;
     cmdConnected = false;
     stateOpen = false;
     cmdOpen = false;
-    
-    memset(&h_state, 0, sizeof(h_state));
-    memset(&h_cmd, 0, sizeof(h_cmd));
+
 
     achChannelState.start("ach mk " + QString::fromLocal8Bit(HUBO_CHAN_STATE_NAME)
                           + " -1 -m 10 -n 8000 -o 666", QIODevice::ReadWrite);
@@ -452,9 +515,7 @@ void HuboInitWidget::initializeAch()
     
     connect(&achdState, SIGNAL(started()), this, SLOT(achdSStartedSlot()));
     connect(&achdCmd, SIGNAL(started()), this, SLOT(achdCStartedSlot()));
-    
-    connect(achdConnect, SIGNAL(clicked()), this, SLOT(achdConnectSlot()));
-    connect(achdDisconnect, SIGNAL(clicked()), this, SLOT(achdDisconnectSlot()));
+
     
     connect(&achdState, SIGNAL(error(QProcess::ProcessError)), this, SLOT(achdSExitError(QProcess::ProcessError)));
     connect(&achdCmd, SIGNAL(error(QProcess::ProcessError)), this, SLOT(achdCExitError(QProcess::ProcessError)));
@@ -463,9 +524,7 @@ void HuboInitWidget::initializeAch()
             this, SLOT(achdSExitFinished(int,QProcess::ExitStatus)));
     connect(&achdCmd, SIGNAL(finished(int,QProcess::ExitStatus)),
             this, SLOT(achdCExitFinished(int,QProcess::ExitStatus)));
-    
-    setJointParams(&h_param, &h_state);
-    setSensorDefaults(&h_param);
+
 }
 
 void HuboInitWidget::achCreateSHandle()

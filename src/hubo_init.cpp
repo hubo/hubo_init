@@ -52,6 +52,11 @@ HuboInitPanel::HuboInitPanel(QWidget *parent)
     setLayout(panelLayout);
 }
 
+HuboInitWidget::~HuboInitWidget()
+{
+    refreshManager->alive = false;
+    refreshManager->terminate();
+}
 
 HuboInitWidget::HuboInitWidget(QWidget *parent)
     : QTabWidget(parent)
@@ -68,6 +73,7 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
                       "padding: 0 3px 0 3px;"
                       "}";
 
+    initializeAchStructs();
 
     initializeCommandTab();
     std::cerr << "Command Tab loaded" << std::endl;
@@ -86,13 +92,32 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     addTab(sensorCmdTab, "Sensor Command");
     addTab(sensorStateTab, "Sensor State");
 
+
+    initializeAchConnections();
     
-    initializeAch();
-    
-    connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(refreshState()));
-    refreshTimer.start(getRefreshTime());
+    refreshManager = new HuboRefreshManager;
+    refreshManager->parentWidget = this;
+    connect(this, SIGNAL(sendWaitTime(int)), refreshManager, SLOT(getWaitTime(int)));
+    refreshManager->start();
 }
 
+void HuboRefreshManager::run()
+{
+    alive = true;
+    waitTime = 1000;
+    connect(this, SIGNAL(signalRefresh()), parentWidget, SLOT(refreshState()));
+    while(alive)
+    {
+        emit signalRefresh();
+        this->msleep(waitTime);
+    }
+    emit finished();
+}
+
+void HuboRefreshManager::getWaitTime(int t)
+{
+    waitTime = t;
+}
 
 void HuboInitWidget::achCreateCatch(QProcess::ProcessError err)
 {
@@ -112,12 +137,14 @@ void HuboInitWidget::initializeCommandTab()
     achdConnect->setText("Connect");
     achdConnect->setToolTip("Connect to Hubo's on board computer");
     achdLayout->addWidget(achdConnect, 0, Qt::AlignCenter);
+    connect(achdConnect, SIGNAL(clicked()), this, SLOT(achdConnectSlot()));
     
     achdDisconnect = new QPushButton;
     achdDisconnect->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     achdDisconnect->setText("Disconnect");
     achdDisconnect->setToolTip("Disconnect from Hubo's on board computer");
     achdLayout->addWidget(achdDisconnect, 0, Qt::AlignCenter);
+    connect(achdDisconnect, SIGNAL(clicked()), this, SLOT(achdDisconnectSlot()));
 
     QHBoxLayout* statusLayout = new QHBoxLayout;
     QLabel* staticLabel = new QLabel;
@@ -218,12 +245,13 @@ void HuboInitWidget::initializeCommandTab()
     refreshLabel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     refreshLabel->setText("Refresh Rate:");
     refreshLabel->setToolTip("Rate (Hz) at which state information is refreshed");
-    refreshRate = new QSpinBox;
+    refreshRate = new QDoubleSpinBox;
     refreshRate->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    refreshRate->setToolTip("Rate (Hz) at which state information is refreshed");
-    refreshRate->setValue(10);
-    refreshRate->setMaximum(200);
-    refreshRate->setMinimum(1);
+    refreshRate->setToolTip("Time (s) between display refreshes");
+    refreshRate->setValue(0.1);
+    refreshRate->setMaximum(10);
+    refreshRate->setMinimum(0.01);
+    refreshRate->setSingleStep(0.1);
     QVBoxLayout* refreshLayout = new QVBoxLayout;
     refreshLayout->addWidget(refreshLabel);
     refreshLayout->addWidget(refreshRate);
@@ -307,7 +335,7 @@ void HuboInitWidget::initializeCommandTab()
     {
         QPushButton* tempPushButton = new QPushButton;
         tempPushButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-        tempPushButton->setText(QString::fromLocal8Bit(jointNames[i]));
+        tempPushButton->setText(QString::fromLocal8Bit(h_param.joint[i].name));
         tempPushButton->setToolTip("Normal");
 
         jointCmdGroup->addButton(tempPushButton, i);
@@ -351,7 +379,7 @@ void HuboInitWidget::initializeJointStateTab()
     {
         QPushButton* tempPushButton = new QPushButton;
         tempPushButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-        tempPushButton->setText(QString::fromLocal8Bit(jointNames[i]));
+        tempPushButton->setText(QString::fromLocal8Bit(h_param.joint[i].name));
         tempPushButton->setToolTip("Normal");
 
         jointStateGroup->addButton(tempPushButton, i);
@@ -483,25 +511,25 @@ void HuboInitWidget::initializeSensorStateTab()
     QGridLayout* ftStateLayout = new QGridLayout;
     ftStateLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
-    QLabel* lhftLab = new QLabel;
-    lhftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    lhftLab->setText("Left Hand");
-    ftStateLayout->addWidget(lhftLab, 0, 1, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
-
     QLabel* rhftLab = new QLabel;
     rhftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     rhftLab->setText("Right Hand");
-    ftStateLayout->addWidget(rhftLab, 0, 2, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+    ftStateLayout->addWidget(rhftLab, 0, 1, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
 
-    QLabel* lfftLab = new QLabel;
-    lfftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    lfftLab->setText("Left Foot");
-    ftStateLayout->addWidget(lfftLab, 0, 3, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+    QLabel* lhftLab = new QLabel;
+    lhftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    lhftLab->setText("Left Hand");
+    ftStateLayout->addWidget(lhftLab, 0, 2, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
 
     QLabel* rfftLab = new QLabel;
     rfftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     rfftLab->setText("Right Foot");
-    ftStateLayout->addWidget(rfftLab, 0, 4, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+    ftStateLayout->addWidget(rfftLab, 0, 3, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
+
+    QLabel* lfftLab = new QLabel;
+    lfftLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    lfftLab->setText("Left Foot");
+    ftStateLayout->addWidget(lfftLab, 0, 4, 1, 1, Qt::AlignHCenter | Qt::AlignVCenter);
 
     QLabel* mxLab = new QLabel;
     mxLab->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -691,3 +719,4 @@ void HuboInitPanel::load(const rviz::Config &config)
 #include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS( hubo_init_space::HuboInitPanel,rviz::Panel )
 PLUGINLIB_EXPORT_CLASS( hubo_init_space::HuboInitWidget, QTabWidget )
+PLUGINLIB_EXPORT_CLASS( hubo_init_space::HuboRefreshManager, QThread )

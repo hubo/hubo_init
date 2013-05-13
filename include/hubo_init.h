@@ -63,6 +63,7 @@
 #include <QClipboard>
 #include <QPalette>
 #include <QColor>
+#include <QThread>
 
 #include <vector>
 
@@ -74,11 +75,30 @@
 namespace hubo_init_space
 {
 
+class HuboInitWidget;
+
+class HuboRefreshManager : public QThread
+{
+Q_OBJECT
+public:
+    HuboInitWidget* parentWidget;
+    bool alive;
+    int waitTime;
+
+protected:
+    virtual void run();
+
+protected slots:
+    void getWaitTime(int t);
+
+signals:
+    void signalRefresh();
+
+};
+
 // Here we declare our new subclass of rviz::Panel.  Every panel which
 // can be added via the Panels/Add_New_Panel menu is a subclass of
 // rviz::Panel.
-
-
 class HuboInitWidget: public QTabWidget
 {
 // This class uses Qt slots and is a subclass of QObject, so it needs
@@ -93,6 +113,7 @@ public:
   // someone using the class for something else to pass in a parent
   // widget as they normally would with Qt.
   HuboInitWidget( QWidget* parent = 0 );
+  ~HuboInitWidget();
 
   QString groupStyleSheet;
 
@@ -106,7 +127,7 @@ public:
   bool cmdConnected;
   
   // Update timer
-  QTimer refreshTimer;
+  HuboRefreshManager* refreshManager;
   int getRefreshTime();
 
   // Ach Channels for sending and receiving data
@@ -115,7 +136,8 @@ public:
   ach_channel_t cmdChan;
   bool cmdOpen;
 
-  void initializeAch();
+  void initializeAchConnections();
+  void initializeAchStructs();
   void commandSensor();
   void sendCommand();
 
@@ -142,6 +164,9 @@ protected:
   int ipAddrC;
   int ipAddrD;
 
+signals:
+  void sendWaitTime(int t);
+
 protected Q_SLOTS:
 
   // Send the command once the joint button is released
@@ -162,6 +187,7 @@ protected Q_SLOTS:
   void handleFTCopy();
   void handleIMUCopy();
   void handleJointCopy();
+
 
   // Update all state information
   void refreshState();
@@ -199,7 +225,7 @@ private:
     QPushButton* homeAll;
     QPushButton* homeBad;
     QPushButton* initSensors;
-    QSpinBox*    refreshRate;
+    QDoubleSpinBox*    refreshRate;
 
     // Vector of buttons for the different joints
     QButtonGroup* jointCmdGroup;
@@ -276,7 +302,8 @@ private:
 
 };
 
-class HuboInitPanel: public rviz::Panel
+
+class HuboInitPanel : public rviz::Panel
 {
 Q_OBJECT
 public:
