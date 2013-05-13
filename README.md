@@ -9,30 +9,30 @@ are going to be ROS-based (specifically using RViz). This is the first step in m
 that integration a reality.
 
 
->> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  IF  YOU  ARE  NEW  TO  ROS  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
->>                                                                                                <<
->> I strongly recommend looking over the tutorials for ROS: http://www.ros.org/wiki/ROS/Tutorials <<
->> You will not technically need to understand ROS or how it works to use hubo_init, but          <<
->> it is not difficult to learn and will certainly be worthwhile down the road. Regardless,       <<
->> below I am providing instructions to install and run hubo_init which should be sufficient      <<
->> whether or not you are familiar with ROS.                                                      <<
->>                                                                                                <<
->> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
+<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  IF  YOU  ARE  NEW  TO  ROS  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
+<<                                                                                                <<
+<< I strongly recommend looking over the tutorials for ROS: http://www.ros.org/wiki/ROS/Tutorials <<
+<< You will not technically need to understand ROS or how it works to use hubo_init, but          <<
+<< it is not difficult to learn and will certainly be worthwhile down the road. Regardless,       <<
+<< below I am providing instructions to install and run hubo_init which should be sufficient      <<
+<< whether or not you are familiar with ROS.                                                      <<
+<<                                                                                                <<
+<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
 
 
 
->> ~~~~~~~~~~~~~~~~~~~~~~~~~  Prerequisites  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
->>                                                                          <<
->> This package depends on both ROS and hubo-ach.                           <<
->>                                                                          <<
->>                                                                          <<
->> To obtain hubo-ach, follow the instructions here:                        <<
->> https://github.com/hubo/hubo-ach                                         <<
->>                                                                          <<
->> To obtain ROS, follow the instructions here (BE SURE TO INSTALL GROOVY): <<
->> http://www.ros.org/wiki/groovy/Installation/Ubuntu                       <<
->>                                                                          <<
->> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
+<< ~~~~~~~~~~~~~~~~~~~~~~~~~  Prerequisites  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
+<<                                                                          <<
+<< This package depends on both ROS and hubo-ach.                           <<
+<<                                                                          <<
+<<                                                                          <<
+<< To obtain hubo-ach, follow the instructions here:                        <<
+<< https://github.com/hubo/hubo-ach                                         <<
+<<                                                                          <<
+<< To obtain ROS, follow the instructions here (BE SURE TO INSTALL GROOVY): <<
+<< http://www.ros.org/wiki/groovy/Installation/Ubuntu                       <<
+<<                                                                          <<
+<< ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <<
 
 
 
@@ -60,9 +60,7 @@ catkin_make
 
 
 
-|vvvvvvvvvvvvvvvvv|
-|vvvvv USAGE vvvvv|
-|vvvvvvvvvvvvvvvvv|
+~~~~~~~~~~~~~~  USAGE  ~~~~~~~~~~~~~~~~~~~
 
 To use hubo_init, do the following:
 
