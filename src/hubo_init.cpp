@@ -656,7 +656,7 @@ void HuboInitWidget::initializeSensorStateTab()
 
     QLabel* velz = new QLabel;
     velz->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    velz->setText("Angular Vel X");
+    velz->setText("Angular Vel Z");
     velz->setToolTip("Angular Velocity about the Z-Axis");
     imuStateLayout->addWidget(velz, 3, 2, 1, 1, Qt::AlignLeft | Qt::AlignBottom );
 
