@@ -35,8 +35,8 @@ http://www.ros.org/wiki/groovy/Installation/Ubuntu
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
-Installation (after satisfying the Prerequisites above):
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+_________________Installation (after satisfying the Prerequisites above):____________________
 
 If you do not have a catkin workspace (or you do not know what a catkin workspace is), copy/paste
 the following block into a terminal:
@@ -57,11 +57,11 @@ cd ~/catkin_ws/src
 git clone https://github.com/hubo/hubo_init.git
 cd ~/catkin_ws
 catkin_make
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
-~~~~~~~~~~~~~~  USAGE  ~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+____________________________ USAGE ___________________________________
 To use hubo_init, do the following:
 
 1) Open a terminal and type in:
@@ -94,5 +94,5 @@ To use hubo_init, do the following:
 6) Click Connect
 
 7) Do whatever.
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
