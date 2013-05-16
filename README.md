@@ -46,6 +46,7 @@ cd ~/catkin_ws/src
 catkin_init_workspace
 cd ~/catkin_ws/
 catkin_make
+source ~/catkin_ws/devel/setup.bash
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
 From now on, the directory ~/catkin_ws/src will be where you keep your ROS package code.
