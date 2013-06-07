@@ -277,7 +277,7 @@ void HuboInitWidget::handleHomeBad()
 
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
     {
-        if( h_state.status[i].homeFlag != 6 && !ignore[i] && h_state.joint[i].active == 1 )
+        if( (h_state.status[i].homeFlag != 6 || h_state.status[i].bigError == 1 ) && !ignore[i] && h_state.joint[i].active == 1 )
         {
             if( i != LF1 && i !=LF2 && i != LF3 && i != LF4 && i != LF5
              && i != RF1 && i !=RF2 && i != RF3 && i != RF4 && i != RF5)

@@ -55,7 +55,8 @@ HuboInitPanel::HuboInitPanel(QWidget *parent)
 HuboInitWidget::~HuboInitWidget()
 {
     refreshManager->alive = false;
-    refreshManager->terminate();
+    refreshManager->quit();
+    refreshManager->wait();
 }
 
 HuboInitWidget::HuboInitWidget(QWidget *parent)

@@ -47,12 +47,6 @@ include_directories( include )
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 
-## An rviz plugin is just a shared library, so here we declare the
-## library to be called ``${PROJECT_NAME}`` (which is
-## "rviz_plugin_tutorials", or whatever your version of this project
-## is called) and specify the list of source files we collected above
-## in ``${SOURCE_FILES}``.
-#rosbuild_add_library(${PROJECT_NAME} ${SOURCE_FILES})
 
 add_library( ${PROJECT_NAME} ${SOURCE_FILES} )
 
