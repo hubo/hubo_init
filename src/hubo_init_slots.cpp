@@ -485,7 +485,8 @@ void HuboInitWidget::initializeAchStructs()
     memset(&h_state, 0, sizeof(h_state));
     memset(&h_param, 0, sizeof(h_param));
     memset(&h_cmd, 0, sizeof(h_cmd));
-    setJointParams(&h_param, &h_state);
+    hubo_pwm_gains_t temp;
+    setJointParams(&h_param, &h_state, &temp);
     setSensorDefaults(&h_param);
 
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
