@@ -63,6 +63,10 @@ HuboInitWidget::HuboInitWidget(QWidget *parent)
     : QTabWidget(parent)
 {
 
+    QProcess copyTable;
+    copyTable.start("sudo cp -f /etc/hubo-ach/drc-hubo.joint.table /etc/hubo-ach/joint.table");
+    copyTable.waitForFinished();
+
     groupStyleSheet = "QGroupBox {"
                       "border: 1px solid gray;"
                       "border-radius: 9px;"
