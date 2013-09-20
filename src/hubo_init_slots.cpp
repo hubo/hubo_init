@@ -491,7 +491,7 @@ void HuboInitWidget::initializeAchStructs()
 
     for(int i=0; i<HUBO_JOINT_COUNT; i++)
         if( strcmp(h_param.joint[i].name, "") == 0 )
-            sprintf( h_param.joint[i].name, "N/A\0" );
+            sprintf( h_param.joint[i].name, "N/A" );
 }
 
 void HuboInitWidget::initializeAchConnections()
